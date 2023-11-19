@@ -1,6 +1,7 @@
 import cv2
 import openpyxl
 import streamlit as st
+import tempfile
 
 def detect_promotion_video(video_path):
     cap = cv2.VideoCapture(video_path)
@@ -77,8 +78,15 @@ report_path = st.text_input("Enter Report Path (e.g., overlay_report.xlsx):")
 
 if st.button("Run Overlay Detection"):
     if reference_video_path is not None and testing_video_path is not None and report_path:
-        reference_promotion_frames = detect_promotion_video(reference_video_path)
-        testing_promotion_frames = detect_promotion_video(testing_video_path)
+        # Save the video files locally
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp, tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as test_temp:
+            ref_temp.write(reference_video_path.read())
+            test_temp.write(testing_video_path.read())
+            reference_path = ref_temp.name
+            testing_path = test_temp.name
+
+        reference_promotion_frames = detect_promotion_video(reference_path)
+        testing_promotion_frames = detect_promotion_video(testing_path)
 
         generate_excel_report(reference_promotion_frames, testing_promotion_frames, report_path)
 
