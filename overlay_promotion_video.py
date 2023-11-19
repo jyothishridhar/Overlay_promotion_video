@@ -84,6 +84,10 @@ if st.button("Run Overlay Detection"):
             reference_path = ref_temp.name
             testing_path = test_temp.name
 
+        # Close the file handles
+        ref_temp.close()
+        test_temp.close()
+
         reference_overlay_frames = detect_overlay(reference_path)
         testing_overlay_frames = detect_overlay(testing_path)
 
