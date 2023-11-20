@@ -53,7 +53,7 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
             test_timestamp, test_frame_num = testing_overlay_frames[row_num - 1]
             data['Testing Timestamp'].append(test_timestamp)
             data['Testing Frame Number'].append(test_frame_num)
-            if row_num <= len(reference_overlay_frames):
+            if row_num <= min(len(reference_overlay_frames), len(testing_overlay_frames)):
                 timestamp_diff = test_timestamp - ref_timestamp
                 frame_num_diff = test_frame_num - ref_frame_num
                 data['Timestamp Difference'].append(timestamp_diff)
