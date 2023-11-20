@@ -1,123 +1,106 @@
 import cv2
+from openpyxl import Workbook
 import streamlit as st
+import os
+import numpy as np
 import tempfile
 import pandas as pd
 
-def detect_overlay(video_path):
+def run_logo_detection(logo_path, video_path, stop_flag):
+    st.write("Starting logo detection...")
+
+    # Read the logo image from the file uploader
+    logo_bytes = logo_path.read()
+    logo_np = np.frombuffer(logo_bytes, np.uint8)
+    logo = cv2.imdecode(logo_np, cv2.IMREAD_COLOR)
+    gray_logo = cv2.cvtColor(logo, cv2.COLOR_BGR2GRAY)
+    sift = cv2.SIFT_create()
+    keypoints_logo, descriptors_logo = sift.detectAndCompute(gray_logo, None)
+
+    # Save the video file locally
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+        temp_video.write(video_path.read())
+        video_path = temp_video.name
+
+    # Open the locally saved video file
     cap = cv2.VideoCapture(video_path)
+    frame_number = 0
 
-    # Calculate histogram for the first frame
-    ret, reference_frame = cap.read()
-    if not ret:
-        return []
+    # Lists to store frame numbers and detection status
+    frame_numbers = []
+    detection_statuses = []
 
-    reference_hist = cv2.calcHist([reference_frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-    reference_hist = cv2.normalize(reference_hist, reference_hist).flatten()
-
-    # Compare histograms of subsequent frames
-    overlay_frames = []
-
-    frame_count = 0
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        frame_count += 1
-        testing_hist = cv2.calcHist([frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-        testing_hist = cv2.normalize(testing_hist, testing_hist).flatten()
+        frame_number += 1  # Increment the frame number
 
-        # Compare histograms using correlation
-        correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
-        if correlation < 0.9:
-            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
-            overlay_frames.append((timestamp, frame_count))
+        # Convert the frame to grayscale
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    cap.release()
+        # Initialize the SIFT detector and compute the keypoints and descriptors for the frame
+        keypoints_frame, descriptors_frame = sift.detectAndCompute(gray_frame, None)
 
-    return overlay_frames
+        # Match the descriptors between the logo and the frame
+        matcher = cv2.BFMatcher()
+        matches = matcher.match(descriptors_logo, descriptors_frame)
 
-def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
-    max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
-    data = {'Reference Timestamp': [], 'Reference Frame Number': [],
-            'Testing Timestamp': [], 'Testing Frame Number': [],
-            'Timestamp Difference': [], 'Frame Number Difference': []}
+        # Sort the matches by their distance
+        matches = sorted(matches, key=lambda x: x.distance)
 
-    # Initialize variables outside the loop
-    ref_timestamp, ref_frame_num = 0, 0
+        # Display the frame number
+        st.write(f"Frame: {frame_number}")
 
-    for row_num in range(1, max_length + 1):
-        if row_num <= len(reference_overlay_frames):
-            ref_timestamp, ref_frame_num = reference_overlay_frames[row_num - 1]
-            data['Reference Timestamp'].append(ref_timestamp)
-            data['Reference Frame Number'].append(ref_frame_num)
+        # If enough good matches are found, consider the logo is detected
+        if len(matches) > 10:  # Adjust the threshold value as per your requirement
+            logo_detected = True
+            detection_status = 'Logo Detected'
         else:
-            # If no reference frame, append NaN or 0 to maintain the array length
-            data['Reference Timestamp'].append(0)
-            data['Reference Frame Number'].append(0)
+            logo_detected = False
+            detection_status = 'Logo Not Detected'
 
-        if row_num <= len(testing_overlay_frames):
-            test_timestamp, test_frame_num = testing_overlay_frames[row_num - 1]
-            data['Testing Timestamp'].append(test_timestamp)
-            data['Testing Frame Number'].append(test_frame_num)
+        # Append frame number and detection status to the lists
+        frame_numbers.append(frame_number)
+        detection_statuses.append(detection_status)
 
-            # Update timestamp_diff and frame_num_diff only if reference frames are available
-            if row_num <= len(reference_overlay_frames):
-                timestamp_diff = test_timestamp - ref_timestamp
-                frame_num_diff = test_frame_num - ref_frame_num
-                data['Timestamp Difference'].append(timestamp_diff)
-                data['Frame Number Difference'].append(frame_num_diff)
-            else:
-                # If no reference frame, append NaN or 0 to maintain the array length
-                data['Timestamp Difference'].append(0)
-                data['Frame Number Difference'].append(0)
+        # Display the frame with logo detection status and frame number
+        st.image(frame, channels="BGR")
+        st.write(f'Detection Status: {detection_status}, Frame: {frame_number}')
 
-    df = pd.DataFrame(data)
-    return df
+        # Check the stop_flag to stop detection
+        if stop_flag[0]:
+            break
 
-def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
-    # Generate DataFrame
-    overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
+    # Save the Excel workbook
+    result_df = pd.DataFrame({'Frame Number': frame_numbers, 'Logo Detection Status': detection_statuses})
+    result_path = os.path.join(os.getcwd(), "logo_detection_report.xlsx")
+    result_df.to_excel(result_path, index=False)
 
-    # Save to CSV
-    csv_report_path = tempfile.mktemp(suffix=".csv")
-    overlay_df.to_csv(csv_report_path, index=False)
+    # Clean up the temporary video file
+    os.unlink(video_path)
 
-    return overlay_df, csv_report_path
+    st.write("Logo detection completed.")
+    return result_df
 
 # Streamlit app code
-st.title("Overlay Detection Demo")
+st.title("Logo Detection Demo")
 
-reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
-testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
+logo_path = st.file_uploader("Upload Logo Image", type=["png", "jpg", "jpeg"])
+video_path = st.file_uploader("Upload Video File", type=["mp4"])
 
-if st.button("Run Overlay Detection"):
-    if reference_video_path is not None and testing_video_path is not None:
-        # Save the video files locally
-        reference_path = tempfile.mktemp(suffix=".mp4")
-        testing_path = tempfile.mktemp(suffix=".mp4")
-        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
-            ref_temp.write(reference_video_path.read())
-            test_temp.write(testing_video_path.read())
+stop_flag = [False]  # Using a list to make it mutable
 
-        reference_overlay_frames = detect_overlay(reference_path)
-        testing_overlay_frames = detect_overlay(testing_path)
-
-        overlay_df, csv_report_path = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
+if st.button("Run Demo"):
+    if logo_path is not None and video_path is not None:
+        result_df = run_logo_detection(logo_path, video_path, stop_flag)
 
         # Display the result on the app
-        st.success("Overlay detection completed! Result:")
+        st.success("Demo completed! Result:")
 
         # Display the DataFrame
-        st.dataframe(overlay_df)
+        st.dataframe(result_df)
 
-        # Provide a download link for the CSV file
-        st.download_button(
-            label="Download CSV",
-            data=csv_report_path,
-            key="csv_download",
-            file_name="overlay_report.csv",
-            mime="text/csv",
-        )
     else:
-        st.warning("Please upload both reference and testing video files.")
+        st.warning("Please upload both the logo and video files.")
