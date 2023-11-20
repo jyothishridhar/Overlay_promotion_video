@@ -52,6 +52,10 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
             ref_timestamp, ref_frame_num = reference_overlay_frames[row_num - 1]
             data['Reference Timestamp'].append(ref_timestamp)
             data['Reference Frame Number'].append(ref_frame_num)
+        else:
+            # If no reference frame, append NaN or 0 to maintain the array length
+            data['Reference Timestamp'].append(0)
+            data['Reference Frame Number'].append(0)
 
         if row_num <= len(testing_overlay_frames):
             test_timestamp, test_frame_num = testing_overlay_frames[row_num - 1]
@@ -64,9 +68,14 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
                 frame_num_diff = test_frame_num - ref_frame_num
                 data['Timestamp Difference'].append(timestamp_diff)
                 data['Frame Number Difference'].append(frame_num_diff)
+            else:
+                # If no reference frame, append NaN or 0 to maintain the array length
+                data['Timestamp Difference'].append(0)
+                data['Frame Number Difference'].append(0)
 
     df = pd.DataFrame(data)
     return df
+
 
 def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, report_path):
     # Generate DataFrame
