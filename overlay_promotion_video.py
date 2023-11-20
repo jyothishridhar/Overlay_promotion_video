@@ -44,16 +44,22 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
             'Testing Timestamp': [], 'Testing Frame Number': [],
             'Timestamp Difference': [], 'Frame Number Difference': []}
 
+    # Initialize variables outside the loop
+    ref_timestamp, ref_frame_num = 0, 0
+
     for row_num in range(1, max_length + 1):
         if row_num <= len(reference_overlay_frames):
             ref_timestamp, ref_frame_num = reference_overlay_frames[row_num - 1]
             data['Reference Timestamp'].append(ref_timestamp)
             data['Reference Frame Number'].append(ref_frame_num)
+
         if row_num <= len(testing_overlay_frames):
             test_timestamp, test_frame_num = testing_overlay_frames[row_num - 1]
             data['Testing Timestamp'].append(test_timestamp)
             data['Testing Frame Number'].append(test_frame_num)
-            if row_num <= min(len(reference_overlay_frames), len(testing_overlay_frames)):
+
+            # Update timestamp_diff and frame_num_diff only if reference frames are available
+            if row_num <= len(reference_overlay_frames):
                 timestamp_diff = test_timestamp - ref_timestamp
                 frame_num_diff = test_frame_num - ref_frame_num
                 data['Timestamp Difference'].append(timestamp_diff)
