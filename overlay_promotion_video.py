@@ -2,6 +2,9 @@ import cv2
 import openpyxl
 import streamlit as st
 import tempfile
+import os
+import numpy as np
+import pandas as pd
 
 def detect_overlay(video_path):
     cap = cv2.VideoCapture(video_path)
@@ -37,36 +40,31 @@ def detect_overlay(video_path):
 
     return overlay_frames
 
-def generate_overlay_excel_report(reference_overlay_frames, testing_overlay_frames, report_path):
+def generate_overlay_excel_report(overlay_frames, report_path):
     wb = openpyxl.Workbook()
     sheet = wb.active
     sheet.title = "Overlay Frames"
 
-    sheet['A1'] = "Reference Timestamp"
-    sheet['B1'] = "Reference Frame Number"
-    sheet['C1'] = "Testing Timestamp"
-    sheet['D1'] = "Testing Frame Number"
-    sheet['E1'] = "Timestamp Difference"
-    sheet['F1'] = "Frame Number Difference"
+    sheet['A1'] = "Timestamp"
+    sheet['B1'] = "Frame Number"
 
-    max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
-
-    for row_num in range(2, max_length + 2):
-        if row_num <= len(reference_overlay_frames):
-            ref_timestamp, ref_frame_num = reference_overlay_frames[row_num - 2]
-            sheet.cell(row=row_num, column=1, value=ref_timestamp)
-            sheet.cell(row=row_num, column=2, value=ref_frame_num)
-        if row_num <= len(testing_overlay_frames):
-            test_timestamp, test_frame_num = testing_overlay_frames[row_num - 2]
-            sheet.cell(row=row_num, column=3, value=test_timestamp)
-            sheet.cell(row=row_num, column=4, value=test_frame_num)
-            if row_num <= len(reference_overlay_frames):
-                timestamp_diff = test_timestamp - ref_timestamp
-                frame_num_diff = test_frame_num - ref_frame_num
-                sheet.cell(row=row_num, column=5, value=timestamp_diff)
-                sheet.cell(row=row_num, column=6, value=frame_num_diff)
+    for row_num, (timestamp, frame_num) in enumerate(overlay_frames, start=2):
+        sheet.cell(row=row_num, column=1, value=timestamp)
+        sheet.cell(row=row_num, column=2, value=frame_num)
 
     wb.save(report_path)
+
+def run_overlay_detection(reference_video_path, testing_video_path, report_path, stop_flag):
+    st.write("Starting overlay detection...")
+
+    reference_overlay_frames = detect_overlay(reference_video_path)
+    testing_overlay_frames = detect_overlay(testing_video_path)
+
+    # Save the Excel report locally
+    generate_overlay_excel_report(testing_overlay_frames, report_path)
+
+    st.write("Overlay detection completed.")
+    return report_path
 
 # Streamlit app code
 st.title("Overlay Detection Demo")
@@ -74,6 +72,8 @@ st.title("Overlay Detection Demo")
 reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
 testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
 report_path = st.text_input("Enter Report Path (e.g., overlay_report.xlsx):")
+
+stop_flag = [False]  # Using a list to make it mutable
 
 if st.button("Run Overlay Detection"):
     if reference_video_path is not None and testing_video_path is not None and report_path:
@@ -88,11 +88,10 @@ if st.button("Run Overlay Detection"):
         ref_temp.close()
         test_temp.close()
 
-        reference_overlay_frames = detect_overlay(reference_path)
-        testing_overlay_frames = detect_overlay(testing_path)
+        result_path = run_overlay_detection(reference_path, testing_path, report_path, stop_flag)
 
-        generate_overlay_excel_report(reference_overlay_frames, testing_overlay_frames, report_path)
-
-        st.success("Overlay detection completed.")
+        # Display the result on the app
+        st.success("Overlay detection completed! Result:")
+        st.markdown(f"Download the result: [{os.path.basename(result_path)}]({result_path})")
     else:
         st.warning("Please upload both reference and testing video files, and provide a report path.")
