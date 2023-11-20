@@ -1,5 +1,4 @@
 import cv2
-import openpyxl
 import streamlit as st
 import tempfile
 import pandas as pd
@@ -76,7 +75,6 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
     df = pd.DataFrame(data)
     return df
 
-
 def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, report_path):
     # Generate DataFrame
     overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
@@ -97,15 +95,11 @@ report_path = st.text_input("Enter Report Path (e.g., overlay_report.xlsx):")
 if st.button("Run Overlay Detection"):
     if reference_video_path is not None and testing_video_path is not None and report_path:
         # Save the video files locally
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp, tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as test_temp:
+        reference_path = tempfile.mktemp(suffix=".mp4")
+        testing_path = tempfile.mktemp(suffix=".mp4")
+        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
             ref_temp.write(reference_video_path.read())
             test_temp.write(testing_video_path.read())
-            reference_path = ref_temp.name
-            testing_path = test_temp.name
-
-        # Close the file handles
-        ref_temp.close()
-        test_temp.close()
 
         reference_overlay_frames = detect_overlay(reference_path)
         testing_overlay_frames = detect_overlay(testing_path)
@@ -128,4 +122,3 @@ if st.button("Run Overlay Detection"):
         )
     else:
         st.warning("Please upload both reference and testing video files, and provide a report path.")
-
