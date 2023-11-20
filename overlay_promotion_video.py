@@ -81,9 +81,6 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, r
     # Generate DataFrame
     overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
 
-    # Save to Excel
-    overlay_df.to_excel(report_path, index=False)
-
     # Save to CSV
     csv_report_path = report_path.replace(".xlsx", ".csv")
     overlay_df.to_csv(csv_report_path, index=False)
@@ -113,7 +110,7 @@ if st.button("Run Overlay Detection"):
         reference_overlay_frames = detect_overlay(reference_path)
         testing_overlay_frames = detect_overlay(testing_path)
 
-        overlay_df, _, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, report_path)
+        overlay_df, _, csv_report_path = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, report_path)
 
         # Display the result on the app
         st.success("Overlay detection completed! Result:")
@@ -121,7 +118,14 @@ if st.button("Run Overlay Detection"):
         # Display the DataFrame
         st.dataframe(overlay_df)
 
-        # Provide a download link for the Excel file
-        st.markdown(f"Download the result: [overlay_report.xlsx]({report_path})")
+        # Provide a download link for the CSV file
+        st.download_button(
+            label="Download CSV",
+            data=csv_report_path,
+            key="csv_download",
+            file_name="overlay_report.csv",
+            mime="text/csv",
+        )
     else:
         st.warning("Please upload both reference and testing video files, and provide a report path.")
+
