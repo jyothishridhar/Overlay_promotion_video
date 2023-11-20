@@ -75,25 +75,24 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
     df = pd.DataFrame(data)
     return df
 
-def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, report_path):
+def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
     # Generate DataFrame
     overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
 
     # Save to CSV
-    csv_report_path = report_path.replace(".xlsx", ".csv")
+    csv_report_path = tempfile.mktemp(suffix=".csv")
     overlay_df.to_csv(csv_report_path, index=False)
 
-    return overlay_df, report_path, csv_report_path
+    return overlay_df, csv_report_path
 
 # Streamlit app code
 st.title("Overlay Detection Demo")
 
 reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
 testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
-report_path = st.text_input("Enter Report Path (e.g., overlay_report.xlsx):")
 
 if st.button("Run Overlay Detection"):
-    if reference_video_path is not None and testing_video_path is not None and report_path:
+    if reference_video_path is not None and testing_video_path is not None:
         # Save the video files locally
         reference_path = tempfile.mktemp(suffix=".mp4")
         testing_path = tempfile.mktemp(suffix=".mp4")
@@ -104,7 +103,7 @@ if st.button("Run Overlay Detection"):
         reference_overlay_frames = detect_overlay(reference_path)
         testing_overlay_frames = detect_overlay(testing_path)
 
-        overlay_df, _, csv_report_path = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames, report_path)
+        overlay_df, csv_report_path = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
 
         # Display the result on the app
         st.success("Overlay detection completed! Result:")
@@ -121,4 +120,4 @@ if st.button("Run Overlay Detection"):
             mime="text/csv",
         )
     else:
-        st.warning("Please upload both reference and testing video files, and provide a report path.")
+        st.warning("Please upload both reference and testing video files.")
