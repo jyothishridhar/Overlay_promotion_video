@@ -103,7 +103,7 @@ if st.button("Run Overlay Detection"):
         reference_overlay_frames = detect_overlay(reference_path)
         testing_overlay_frames = detect_overlay(testing_path)
 
-        overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
+        overlay_df, csv_report_path = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
 
         # Display the result on the app
         st.success("Overlay detection completed! Result:")
@@ -111,5 +111,13 @@ if st.button("Run Overlay Detection"):
         # Display the DataFrame
         st.dataframe(overlay_df)
 
+        # Provide a download link for the CSV file
+        st.download_button(
+            label="Download CSV",
+            data=csv_report_path,
+            key="csv_download",
+            file_name="overlay_report.csv",
+            mime="text/csv",
+        )
     else:
         st.warning("Please upload both reference and testing video files.")
