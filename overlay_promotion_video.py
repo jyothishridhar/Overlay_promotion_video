@@ -9,11 +9,14 @@ def detect_overlay(video_content):
     # Convert video content to NumPy array
     video_np = np.frombuffer(video_content, dtype=np.uint8)
 
-    # Create a file-like object from the NumPy array
-    video_file = io.BytesIO(video_np)
+    # Create a temporary file and write the video content to it
+    temp_file_path = tempfile.mktemp(suffix=".mp4")
+    with open(temp_file_path, "wb") as temp_file:
+        temp_file.write(video_np)
 
-    # Use cv2.VideoCapture with the file-like object
-    cap = cv2.VideoCapture(video_file)
+    # Use cv2.VideoCapture with the temporary file
+    cap = cv2.VideoCapture(temp_file_path)
+
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
