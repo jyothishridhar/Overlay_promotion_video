@@ -1,16 +1,10 @@
 import cv2
 import streamlit as st
-import pandas as pd
-import numpy as np
-import io
 import tempfile
+import pandas as pd
 
-def detect_overlay(video_content):
-    # Convert video content to NumPy array
-    video_np = np.frombuffer(video_content, dtype=np.uint8)
-
-    # Use cv2.VideoCapture with the NumPy array
-    cap = cv2.VideoCapture(video_np)
+def detect_overlay(video_path):
+    cap = cv2.VideoCapture(video_path)
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
@@ -42,6 +36,86 @@ def detect_overlay(video_content):
     cap.release()
 
     return overlay_frames
+
+def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
+    max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
+    data = {'Reference Timestamp': [], 'Reference Frame Number': [],
+            'Testing Timestamp': [], 'Testing Frame Number': [],
+            'Timestamp Difference': [], 'Frame Number Difference': []}
+
+    # Initialize variables outside the loop
+    ref_timestamp, ref_frame_num = 0, 0
+
+    for row_num in range(1, max_length + 1):
+        if row_num <= len(reference_overlay_frames):
+            ref_timestamp, ref_frame_num = reference_overlay_frames[row_num - 1]
+            data['Reference Timestamp'].append(ref_timestamp)
+            data['Reference Frame Number'].append(ref_frame_num)
+        else:
+            # If no reference frame, append NaN or 0 to maintain the array length
+            data['Reference Timestamp'].append(0)
+            data['Reference Frame Number'].append(0)
+
+        if row_num <= len(testing_overlay_frames):
+            test_timestamp, test_frame_num = testing_overlay_frames[row_num - 1]
+            data['Testing Timestamp'].append(test_timestamp)
+            data['Testing Frame Number'].append(test_frame_num)
+
+            # Update timestamp_diff and frame_num_diff only if reference frames are available
+            if row_num <= len(reference_overlay_frames):
+                timestamp_diff = test_timestamp - ref_timestamp
+                frame_num_diff = test_frame_num - ref_frame_num
+                data['Timestamp Difference'].append(timestamp_diff)
+                data['Frame Number Difference'].append(frame_num_diff)
+            else:
+                # If no reference frame, append NaN or 0 to maintain the array length
+                data['Timestamp Difference'].append(0)
+                data['Frame Number Difference'].append(0)
+
+    df = pd.DataFrame(data)
+    return df
+
+def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
+    # Generate DataFrame
+    overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
+
+    # Save to CSV
+    csv_report_path = tempfile.mktemp(suffix=".csv")
+    overlay_df.to_csv(csv_report_path, index=False)
+
+    return overlay_df, csv_report_path
+
+# Streamlit app code
+st.title("Overlay Detection Demo")
+
+reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
+testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
+
+if st.button("Run Overlay Detection"):
+    if reference_video_path is not None and testing_video_path is not None:
+        # Save the video files locally
+        reference_path = tempfile.mktemp(suffix=".mp4")
+        testing_path = tempfile.mktemp(suffix=".mp4")
+        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
+            ref_temp.write(reference_video_path.read())
+            test_temp.write(testing_video_path.read())
+
+        reference_overlay_frames = detect_overlay(reference_path)
+        testing_overlay_frames = detect_overlay(testing_path)
+
+        overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
+
+        # Display the result on the app
+        st.success("Overlay detection completed! Result:")
+
+        # Display the DataFrame
+        st.dataframe(overlay_df)
+
+    else:
+        st.warning("Please upload both reference and testing video files.")
+
+
+
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
