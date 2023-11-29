@@ -4,17 +4,25 @@ import tempfile
 import pandas as pd
 import numpy as np
 import io
+from PIL import Image
+import imghdr
 
 def detect_overlay(video_content):
     # Convert video content to NumPy array
     video_np = np.frombuffer(video_content, dtype=np.uint8)
 
-    # Create a file-like object from the NumPy array
-    video_file = io.BytesIO(video_np)
-
-    # Use cv2.VideoCapture with the file-like object
-    cap = cv2.VideoCapture(video_file, cv2.CAP_FFMPEG)
+    # Use PIL to detect the image format
+    image_format = imghdr.what(io.BytesIO(video_np))
     
+    if image_format == 'jpeg':
+        # Convert NumPy array to PIL Image
+        image = Image.open(io.BytesIO(video_np))
+        # Convert PIL Image to NumPy array
+        video_np = np.array(image)
+
+    # Use cv2.VideoCapture with the NumPy array
+    cap = cv2.VideoCapture(video_np)
+
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
     if not ret:
