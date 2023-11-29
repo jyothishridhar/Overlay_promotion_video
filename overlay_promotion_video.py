@@ -93,16 +93,15 @@ testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
 
 if st.button("Run Overlay Detection"):
     if reference_video_path is not None and testing_video_path is not None:
-        # Save the video files locally
-        reference_path = tempfile.mktemp(suffix=".mp4")
-        testing_path = tempfile.mktemp(suffix=".mp4")
-        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
-            ref_temp.write(reference_video_path.read())
-            test_temp.write(testing_video_path.read())
+        # Use the file content directly, no need to save to a temporary file
+        reference_video_content = reference_video_path.read()
+        testing_video_content = testing_video_path.read()
 
-        reference_overlay_frames = detect_overlay(reference_path)
-        testing_overlay_frames = detect_overlay(testing_path)
+        # Perform overlay detection
+        reference_overlay_frames = detect_overlay(cv2.VideoCapture(reference_video_content))
+        testing_overlay_frames = detect_overlay(cv2.VideoCapture(testing_video_content))
 
+        # Generate overlay reports
         overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
 
         # Display the result on the app
@@ -113,6 +112,3 @@ if st.button("Run Overlay Detection"):
 
     else:
         st.warning("Please upload both reference and testing video files.")
-
-
-
