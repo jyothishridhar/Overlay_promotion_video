@@ -2,9 +2,15 @@ import cv2
 import streamlit as st
 import tempfile
 import pandas as pd
+import requests
+import io
 
-def detect_overlay(video_path):
-    cap = cv2.VideoCapture(video_path)
+def download_video(url):
+    response = requests.get(url)
+    return io.BytesIO(response.content)
+
+def detect_overlay(video_content):
+    cap = cv2.VideoCapture(io.BytesIO(video_content))
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
@@ -84,35 +90,25 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
     overlay_df.to_csv(csv_report_path, index=False)
 
     return overlay_df, csv_report_path
-
 # Streamlit app code
 st.title("Overlay Detection Demo")
 
-reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
-testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
+# Git LFS URLs for the videos
+reference_video_url = "https://<your-repo-url>/raw/master/C:/OTT_overlay_stream/concat_video_1.mp4"
+testing_video_url = "https://<your-repo-url>/raw/master/C:/OTT_overlay_stream/concat_video_2.mp4"
+
+# Download videos
+reference_video_content = download_video(reference_video_url)
+testing_video_content = download_video(testing_video_url)
 
 if st.button("Run Overlay Detection"):
-    if reference_video_path is not None and testing_video_path is not None:
-        # Save the video files locally
-        reference_path = tempfile.mktemp(suffix=".mp4")
-        testing_path = tempfile.mktemp(suffix=".mp4")
-        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
-            ref_temp.write(reference_video_path.read())
-            test_temp.write(testing_video_path.read())
+    reference_overlay_frames = detect_overlay(reference_video_content)
+    testing_overlay_frames = detect_overlay(testing_video_content)
 
-        reference_overlay_frames = detect_overlay(reference_path)
-        testing_overlay_frames = detect_overlay(testing_path)
+    overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
 
-        overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
+    # Display the result on the app
+    st.success("Overlay detection completed! Result:")
 
-        # Display the result on the app
-        st.success("Overlay detection completed! Result:")
-
-        # Display the DataFrame
-        st.dataframe(overlay_df)
-
-    else:
-        st.warning("Please upload both reference and testing video files.")
-
-
-
+    # Display the DataFrame
+    st.dataframe(overlay_df)
