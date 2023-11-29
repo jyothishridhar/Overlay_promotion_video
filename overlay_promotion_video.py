@@ -3,13 +3,18 @@ import streamlit as st
 import tempfile
 import pandas as pd
 import numpy as np
-
+import io
 
 def detect_overlay(video_content):
     # Convert video content to NumPy array
     video_np = np.frombuffer(video_content, dtype=np.uint8)
-    cap = cv2.VideoCapture(video_np, cv2.CAP_FFMPEG)
 
+    # Create a file-like object from the NumPy array
+    video_file = io.BytesIO(video_np)
+
+    # Use cv2.VideoCapture with the file-like object
+    cap = cv2.VideoCapture(video_file, cv2.CAP_FFMPEG)
+    
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
     if not ret:
