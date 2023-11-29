@@ -2,10 +2,9 @@ import cv2
 import streamlit as st
 import tempfile
 import pandas as pd
-from io import BytesIO
 
-def detect_overlay(video_bytes):
-    cap = cv2.VideoCapture(BytesIO(video_bytes))
+def detect_overlay(video_path):
+    cap = cv2.VideoCapture(video_path)
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
@@ -37,6 +36,7 @@ def detect_overlay(video_bytes):
     cap.release()
 
     return overlay_frames
+
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
     data = {'Reference Timestamp': [], 'Reference Frame Number': [],
@@ -75,7 +75,6 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
     df = pd.DataFrame(data)
     return df
 
-
 def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
     # Generate DataFrame
     overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
@@ -89,13 +88,20 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
 # Streamlit app code
 st.title("Overlay Detection Demo")
 
-reference_video = st.file_uploader("Upload Reference Video File", type=["mp4"])
-testing_video = st.file_uploader("Upload Testing Video File", type=["mp4"])
+reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
+testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
 
 if st.button("Run Overlay Detection"):
-    if reference_video is not None and testing_video is not None:
-        reference_overlay_frames = detect_overlay(reference_video.read())
-        testing_overlay_frames = detect_overlay(testing_video.read())
+    if reference_video_path is not None and testing_video_path is not None:
+        # Save the video files locally
+        reference_path = tempfile.mktemp(suffix=".mp4")
+        testing_path = tempfile.mktemp(suffix=".mp4")
+        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
+            ref_temp.write(reference_video_path.read())
+            test_temp.write(testing_video_path.read())
+
+        reference_overlay_frames = detect_overlay(reference_path)
+        testing_overlay_frames = detect_overlay(testing_path)
 
         overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
 
@@ -107,3 +113,6 @@ if st.button("Run Overlay Detection"):
 
     else:
         st.warning("Please upload both reference and testing video files.")
+
+
+
