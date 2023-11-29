@@ -1,7 +1,5 @@
 import cv2
-import streamlit as st
 import tempfile
-import pandas as pd
 import requests
 import io
 
@@ -10,7 +8,14 @@ def download_video(url):
     return io.BytesIO(response.content)
 
 def detect_overlay(video_content):
-    cap = cv2.VideoCapture(io.BytesIO(video_content))
+    # Write video content to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+        temp_file.write(video_content.getvalue())
+        temp_file_path = temp_file.name
+
+    # Open the video file using VideoCapture
+    cap = cv2.VideoCapture(temp_file_path)
+
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
@@ -40,6 +45,8 @@ def detect_overlay(video_content):
             overlay_frames.append((timestamp, frame_count))
 
     cap.release()
+    cv2.destroyAllWindows()
+    temp_file.unlink()
 
     return overlay_frames
 
