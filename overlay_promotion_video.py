@@ -2,37 +2,8 @@ import cv2
 import streamlit as st
 import tempfile
 import pandas as pd
-import streamlit.components.v1 as components
+import gdown
 
-def install_gdown():
-    components.html(
-        """
-        <h2>Installing gdown...</h2>
-        <p>This may take a minute.</p>
-        """
-    )
-    st.experimental_memo(gdown.install)
-    components.html("<h2>gdown has been installed!</h2>")
-
-# Try to import gdown, install it if not available
-try:
-    import gdown
-except ImportError:
-    st.warning("gdown is not installed. Installing now...")
-    st.warning("This might take a minute.")
-
-    # Install gdown
-    st.code("!pip install gdown")
-    import gdown  # Try to import again
-
-    # Check if the import was successful
-    try:
-        import gdown
-        st.success("gdown has been successfully installed.")
-    except ImportError:
-        st.error("Failed to install gdown. Please check the logs for more information.")
-
-# Continue with the rest of your code...
 
 
 def download_google_drive_file(file_id, output_path):
