@@ -97,7 +97,6 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
 
     return overlay_df, csv_report_path
 
-# Streamlit app code
 st.title("Overlay Detection Demo")
 
 reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
@@ -105,7 +104,7 @@ testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
 
 if st.button("Run Overlay Detection"):
     if reference_video_path is not None and testing_video_path is not None:
-        # Use the file content directly, no need to save to a temporary file
+        # Read the file content explicitly
         reference_video_content = reference_video_path.read()
         testing_video_content = testing_video_path.read()
 
