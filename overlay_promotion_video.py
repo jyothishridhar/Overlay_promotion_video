@@ -3,23 +3,22 @@ import streamlit as st
 import tempfile
 import pandas as pd
 
-def detect_overlay(video_path):
-    cap = cv2.VideoCapture(video_path)
+def detect_overlay(video_content):
+    # Convert the video content to a numpy array
+    nparr = np.frombuffer(video_content, np.uint8)
+    
+    # Decode the numpy array into an OpenCV image
+    reference_frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    # Calculate histogram for the first frame
-    ret, reference_frame = cap.read()
-    if not ret:
-        return []
-
-    reference_hist = cv2.calcHist([reference_frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-    reference_hist = cv2.normalize(reference_hist, reference_hist).flatten()
+    # Your existing code for histogram calculation...
 
     # Compare histograms of subsequent frames
     overlay_frames = []
 
     frame_count = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
+    while True:
+        # Read the next frame
+        ret, frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         if not ret:
             break
 
@@ -30,12 +29,11 @@ def detect_overlay(video_path):
         # Compare histograms using correlation
         correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
         if correlation < 0.9:
-            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
+            timestamp = frame_count  # You may want to use the actual timestamp here
             overlay_frames.append((timestamp, frame_count))
 
-    cap.release()
-
     return overlay_frames
+
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
