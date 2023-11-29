@@ -1,3 +1,5 @@
+!pip install gdown
+
 import cv2
 import streamlit as st
 import tempfile
