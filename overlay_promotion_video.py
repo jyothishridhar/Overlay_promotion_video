@@ -1,22 +1,16 @@
 import cv2
 import streamlit as st
-import tempfile
 import pandas as pd
 import numpy as np
 import io
+import tempfile
 
 def detect_overlay(video_content):
     # Convert video content to NumPy array
     video_np = np.frombuffer(video_content, dtype=np.uint8)
 
-    # Create a temporary file and write the video content to it
-    temp_file_path = tempfile.mktemp(suffix=".mp4")
-    with open(temp_file_path, "wb") as temp_file:
-        temp_file.write(video_np)
-
-    # Use cv2.VideoCapture with the temporary file
-    cap = cv2.VideoCapture(temp_file_path)
-
+    # Use cv2.VideoCapture with the NumPy array
+    cap = cv2.VideoCapture(video_np)
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
@@ -97,6 +91,7 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
 
     return overlay_df, csv_report_path
 
+# Streamlit app code
 st.title("Overlay Detection Demo")
 
 reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
@@ -123,6 +118,5 @@ if st.button("Run Overlay Detection"):
 
     else:
         st.warning("Please upload both reference and testing video files.")
-
 
 
