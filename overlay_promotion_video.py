@@ -18,7 +18,22 @@ def install_gdown():
 try:
     import gdown
 except ImportError:
-    install_gdown()
+    st.warning("gdown is not installed. Installing now...")
+    st.warning("This might take a minute.")
+
+    # Install gdown
+    st.code("!pip install gdown")
+    import gdown  # Try to import again
+
+    # Check if the import was successful
+    try:
+        import gdown
+        st.success("gdown has been successfully installed.")
+    except ImportError:
+        st.error("Failed to install gdown. Please check the logs for more information.")
+
+# Continue with the rest of your code...
+
 
 def download_google_drive_file(file_id, output_path):
     url = f"https://drive.google.com/uc?id={file_id}"
