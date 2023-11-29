@@ -2,6 +2,12 @@ import cv2
 import streamlit as st
 import tempfile
 import pandas as pd
+import gdown  # Add this import for Google Drive download
+
+def download_google_drive_file(file_id, output_path):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    gdown.download(url, output_path, quiet=False)
+
 
 def detect_overlay(video_path):
     cap = cv2.VideoCapture(video_path)
@@ -88,17 +94,19 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
 # Streamlit app code
 st.title("Overlay Detection Demo")
 
-reference_video_path = st.file_uploader("Upload Reference Video File", type=["mp4"])
-testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
+# Replace these file uploader lines with text input for Google Drive file IDs
+reference_video_id = st.text_input("Enter Reference Video Google Drive File ID:")
+testing_video_id = st.text_input("Enter Testing Video Google Drive File ID:")
 
 if st.button("Run Overlay Detection"):
-    if reference_video_path is not None and testing_video_path is not None:
+    if reference_video_id != "" and testing_video_id != "":
         # Save the video files locally
         reference_path = tempfile.mktemp(suffix=".mp4")
         testing_path = tempfile.mktemp(suffix=".mp4")
-        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
-            ref_temp.write(reference_video_path.read())
-            test_temp.write(testing_video_path.read())
+
+        # Download videos from Google Drive
+        download_google_drive_file(reference_video_id, reference_path)
+        download_google_drive_file(testing_video_id, testing_path)
 
         reference_overlay_frames = detect_overlay(reference_path)
         testing_overlay_frames = detect_overlay(testing_path)
@@ -112,7 +120,4 @@ if st.button("Run Overlay Detection"):
         st.dataframe(overlay_df)
 
     else:
-        st.warning("Please upload both reference and testing video files.")
-
-
-
+        st.warning("Please enter both reference and testing video Google Drive File IDs.")
