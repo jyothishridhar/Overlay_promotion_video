@@ -2,12 +2,16 @@ import cv2
 import streamlit as st
 import tempfile
 import pandas as pd
-import numpy as np
 
-def detect_overlay(video_content):
+def detect_overlay(video_path):
+    # cap = cv2.VideoCapture(video_path)
+    # def detect_overlay(video_content):
     # Convert video content to NumPy array
-    video_np = np.asarray(bytearray(video_content), dtype=np.uint8)
-    cap = cv2.imdecode(video_np, cv2.IMREAD_UNCHANGED)
+    video_np = np.frombuffer(video_content, dtype=np.uint8)
+    cap = cv2.VideoCapture(video_np, cv2.CAP_FFMPEG)
+
+    # Rest of your detection code...
+
 
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
@@ -96,15 +100,16 @@ testing_video_path = st.file_uploader("Upload Testing Video File", type=["mp4"])
 
 if st.button("Run Overlay Detection"):
     if reference_video_path is not None and testing_video_path is not None:
-        # Use the file content directly, no need to save to a temporary file
-        reference_video_content = reference_video_path.read()
-        testing_video_content = testing_video_path.read()
+        # Save the video files locally
+        reference_path = tempfile.mktemp(suffix=".mp4")
+        testing_path = tempfile.mktemp(suffix=".mp4")
+        with open(reference_path, "wb") as ref_temp, open(testing_path, "wb") as test_temp:
+            ref_temp.write(reference_video_path.read())
+            test_temp.write(testing_video_path.read())
 
-        # Perform overlay detection
-        reference_overlay_frames = detect_overlay(reference_video_content)
-        testing_overlay_frames = detect_overlay(testing_video_content)
+        reference_overlay_frames = detect_overlay(reference_path)
+        testing_overlay_frames = detect_overlay(testing_path)
 
-        # Generate overlay reports
         overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
 
         # Display the result on the app
@@ -115,3 +120,7 @@ if st.button("Run Overlay Detection"):
 
     else:
         st.warning("Please upload both reference and testing video files.")
+
+
+
+
