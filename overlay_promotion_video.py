@@ -43,7 +43,7 @@ def detect_overlay(video_content):
 
                 # Compare histograms using correlation
                 correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
-                if correlation < 0.8:
+                if correlation < 0.2:
                     # Get the timestamp of the current frame
                     timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
                     overlay_frames.append((timestamp, frame_count))
