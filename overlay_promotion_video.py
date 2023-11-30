@@ -46,7 +46,8 @@ def detect_overlay(video_content):
                 if correlation < 0.2:
                     # Get the timestamp of the current frame
                     timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
-                    overlay_frames.append((timestamp, frame_count))
+                    overlay_frames.append((timestamp, cap.get(cv2.CAP_PROP_POS_FRAMES)))
+
                 print(f"Correlation: {correlation}")
 
         finally:
