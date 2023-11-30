@@ -18,7 +18,6 @@ def detect_overlay(video_content):
     # Open the video file using VideoCapture
     cap = cv2.VideoCapture(temp_file_path)
 
-
     # Calculate histogram for the first frame
     ret, reference_frame = cap.read()
     if not ret:
@@ -46,11 +45,12 @@ def detect_overlay(video_content):
             timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
             overlay_frames.append((timestamp, frame_count))
         print(f"Correlation: {correlation}")
+
     cap.release()
-    cv2.destroyAllWindows()
     temp_file.unlink()
 
     return overlay_frames
+
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
