@@ -4,7 +4,7 @@ import tempfile
 import requests
 import io
 import pandas as pd
-import os  # Don't forget to import the os module
+import os
 
 def download_video(url):
     response = requests.get(url)
@@ -118,8 +118,23 @@ testing_video_content = download_video(testing_video_url)
 
 # Add download links
 st.markdown(f"**Download Reference Video**")
-st.markdown(f"[Click here to download Reference Video]({reference_video_url})")
+st.markdown(f"[Click here to download the Reference Video]({reference_video_url})")
 
 st.markdown(f"**Download Testing Video**")
-st.markdown(f"[Click here to download Testing Video]({testing_video_url})")
+st.markdown(f"[Click here to download the Testing Video]({testing_video_url})")
 
+if st.button("Run Overlay Detection"):
+    reference_overlay_frames = detect_overlay(reference_video_content)
+    testing_overlay_frames = detect_overlay(testing_video_content)
+
+    overlay_df, csv_report_path = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
+
+    # Display the result on the app
+    st.success("Overlay detection completed! Result:")
+
+    # Display the DataFrame
+    st.dataframe(overlay_df)
+
+    # Add download link for the report
+    st.markdown(f"**Download Overlay Report**")
+    st.markdown(f"[Click here to download the Overlay Report CSV]({csv_report_path})")
