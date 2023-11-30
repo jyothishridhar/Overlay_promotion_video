@@ -1,3 +1,4 @@
+import os
 import cv2
 import streamlit as st
 import tempfile
@@ -10,8 +11,8 @@ def download_video(url):
     return io.BytesIO(response.content)
 
 def detect_overlay(video_content):
-    # Write video content to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+    # Create a temporary file
+    with tempfile.TemporaryFile(suffix=".mp4") as temp_file:
         temp_file.write(video_content.getvalue())
         temp_file_path = temp_file.name
 
@@ -50,12 +51,7 @@ def detect_overlay(video_content):
         finally:
             cap.release()
 
-        # Move unlink outside the try block
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
     return overlay_frames
-
 
 
 
