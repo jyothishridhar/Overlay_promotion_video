@@ -15,41 +15,44 @@ def detect_overlay(video_content):
         temp_file.write(video_content.getvalue())
         temp_file_path = temp_file.name
 
-    # Open the video file using VideoCapture
-    cap = cv2.VideoCapture(temp_file_path)
+        # Open the video file using VideoCapture
+        cap = cv2.VideoCapture(temp_file_path)
 
-    # Calculate histogram for the first frame
-    ret, reference_frame = cap.read()
-    if not ret:
-        return []
+        try:
+            # Calculate histogram for the first frame
+            ret, reference_frame = cap.read()
+            if not ret:
+                return []
 
-    reference_hist = cv2.calcHist([reference_frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-    reference_hist = cv2.normalize(reference_hist, reference_hist).flatten()
+            reference_hist = cv2.calcHist([reference_frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+            reference_hist = cv2.normalize(reference_hist, reference_hist).flatten()
 
-    # Compare histograms of subsequent frames
-    overlay_frames = []
+            # Compare histograms of subsequent frames
+            overlay_frames = []
 
-    frame_count = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+            frame_count = 0
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
-        frame_count += 1
-        testing_hist = cv2.calcHist([frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-        testing_hist = cv2.normalize(testing_hist, testing_hist).flatten()
+                frame_count += 1
+                testing_hist = cv2.calcHist([frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+                testing_hist = cv2.normalize(testing_hist, testing_hist).flatten()
 
-        # Compare histograms using correlation
-        correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
-        if correlation < 0.8:
-            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
-            overlay_frames.append((timestamp, frame_count))
-        print(f"Correlation: {correlation}")
+                # Compare histograms using correlation
+                correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
+                if correlation < 0.8:
+                    timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
+                    overlay_frames.append((timestamp, frame_count))
+                print(f"Correlation: {correlation}")
 
-    cap.release()
-    temp_file.unlink()
+        finally:
+            cap.release()
+            temp_file.unlink()
 
     return overlay_frames
+
 
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
