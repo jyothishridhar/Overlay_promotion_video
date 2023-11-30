@@ -103,8 +103,8 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
 st.title("Overlay Detection Demo")
 
 # Git LFS URLs for the videos
-reference_video_url = "https://github.com/jyothishridhar/Overlay_promotion_video.git/raw/master/C:/OTT_overlay_stream/concat_video_1.mp4"
-testing_video_url = "https://github.com/jyothishridhar/Overlay_promotion_video.git/raw/master/C:/OTT_overlay_stream/concat_video_2.mp4"
+reference_video_url = "https://github.com/jyothishridhar/Overlay_promotion_video/blob/main/.gitattributes/raw/master/C:/OTT_overlay_stream/concat_video_1.mp4"
+testing_video_url = "https://github.com/jyothishridhar/Overlay_promotion_video/blob/main/.gitattributes/raw/master/C:/OTT_overlay_stream/concat_video_2.mp4"
 
 # Download videos
 reference_video_content = download_video(reference_video_url)
