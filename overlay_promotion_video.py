@@ -52,6 +52,7 @@ def detect_overlay(video_content):
         os.remove(temp_file_path)
 
     return overlay_frames
+
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
     data = {'Reference Timestamp': [], 'Reference Frame Number': [],
@@ -115,14 +116,10 @@ testing_video_url = "https://github.com/jyothishridhar/Overlay_promotion_video/r
 reference_video_content = download_video(reference_video_url)
 testing_video_content = download_video(testing_video_url)
 
-if st.button("Run Overlay Detection"):
-    reference_overlay_frames = detect_overlay(reference_video_content)
-    testing_overlay_frames = detect_overlay(testing_video_content)
+# Add download links
+st.markdown(f"**Download Reference Video**")
+st.markdown(f"[Click here to download Reference Video]({reference_video_url})")
 
-    overlay_df, _ = generate_overlay_reports(reference_overlay_frames, testing_overlay_frames)
+st.markdown(f"**Download Testing Video**")
+st.markdown(f"[Click here to download Testing Video]({testing_video_url})")
 
-    # Display the result on the app
-    st.success("Overlay detection completed! Result:")
-
-    # Display the DataFrame
-    st.dataframe(overlay_df)
