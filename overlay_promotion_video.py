@@ -99,6 +99,10 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
     return df
 
 def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
+    # Print the length of overlay frames
+    print("Reference Overlay Frames:", len(reference_overlay_frames))
+    print("Testing Overlay Frames:", len(testing_overlay_frames))
+
     # Generate DataFrame
     overlay_df = generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
 
@@ -107,6 +111,7 @@ def generate_overlay_reports(reference_overlay_frames, testing_overlay_frames):
     overlay_df.to_csv(csv_report_path, index=False)
 
     return overlay_df, csv_report_path
+
 # Streamlit app code
 st.title("Overlay Detection Demo")
 
