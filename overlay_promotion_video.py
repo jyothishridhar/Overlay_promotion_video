@@ -49,9 +49,13 @@ def detect_overlay(video_content):
 
         finally:
             cap.release()
-            temp_file.unlink()
+
+        # Move unlink outside the try block
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
 
     return overlay_frames
+
 
 
 
