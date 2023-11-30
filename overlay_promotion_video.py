@@ -31,11 +31,13 @@ def detect_overlay(video_content):
             # Compare histograms of subsequent frames
             overlay_frames = []
 
+            frame_count = 0
             while cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
                     break
 
+                frame_count += 1
                 testing_hist = cv2.calcHist([frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
                 testing_hist = cv2.normalize(testing_hist, testing_hist).flatten()
 
@@ -51,6 +53,7 @@ def detect_overlay(video_content):
             cap.release()
 
     return overlay_frames
+
 
 
 # ... (rest of the code remains unchanged)
