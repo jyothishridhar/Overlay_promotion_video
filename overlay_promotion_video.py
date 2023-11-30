@@ -42,10 +42,10 @@ def detect_overlay(video_content):
 
         # Compare histograms using correlation
         correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
-        if correlation < 0.9:
+        if correlation < 0.8:
             timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
             overlay_frames.append((timestamp, frame_count))
-
+        print(f"Correlation: {correlation}")
     cap.release()
     cv2.destroyAllWindows()
     temp_file.unlink()
