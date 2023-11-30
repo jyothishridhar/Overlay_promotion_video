@@ -4,6 +4,7 @@ import tempfile
 import requests
 import io
 import pandas as pd
+import os  # Don't forget to import the os module
 
 def download_video(url):
     response = requests.get(url)
@@ -17,6 +18,8 @@ def detect_overlay(video_content):
 
     cap = cv2.VideoCapture(temp_file_path)
 
+    overlay_frames = []  # Correct variable name
+
     try:
         # Rest of your detection code here...
         ret, reference_frame = cap.read()
@@ -28,7 +31,6 @@ def detect_overlay(video_content):
 
     return overlay_frames
 
-# Rest of your code remains unchanged...
 
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
