@@ -4,6 +4,7 @@ import tempfile
 import requests
 import io
 import pandas as pd
+import os  # Don't forget to import the os module
 
 def download_video(url):
     response = requests.get(url)
@@ -48,10 +49,9 @@ def detect_overlay(video_content):
     finally:
         cap.release()
         # Clean up the temporary file
-        temp_file.cleanup()
+        os.remove(temp_file_path)
 
     return overlay_frames
-
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
     data = {'Reference Timestamp': [], 'Reference Frame Number': [],
