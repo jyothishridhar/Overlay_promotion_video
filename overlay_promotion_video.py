@@ -28,6 +28,10 @@ def detect_overlay(video_content):
             reference_hist = cv2.calcHist([reference_frame], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
             reference_hist = cv2.normalize(reference_hist, reference_hist).flatten()
 
+            # Get frames per second and frame count
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
             # Compare histograms of subsequent frames
             overlay_frames = []
 
@@ -44,7 +48,8 @@ def detect_overlay(video_content):
                 # Compare histograms using correlation
                 correlation = cv2.compareHist(reference_hist, testing_hist, cv2.HISTCMP_CORREL)
                 if correlation < 0.8:
-                    timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)  # Get timestamp in milliseconds
+                    # Calculate timestamp based on frame number and frame rate
+                    timestamp = (frame_count / fps) * 1000  # Convert to milliseconds
                     overlay_frames.append((timestamp, frame_count))
                 print(f"Correlation: {correlation}")
 
@@ -53,7 +58,7 @@ def detect_overlay(video_content):
 
     return overlay_frames
 
-
+# ... (rest of the code remains unchanged)
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
