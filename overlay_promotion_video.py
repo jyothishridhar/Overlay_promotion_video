@@ -88,7 +88,7 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
                 if timestamp_diff == 0 and frame_num_diff == 0:
                     data['Promotion Video Status'].append('Same Frame')
                 else:
-                    data['Promotion Video Status'].append('Overlay')
+                    data['Promotion Video Status'].append('Overlay detected')
             else:
                 # If no reference frame, append NaN or 0 to maintain the array length
                 data['Timestamp Difference'].append(0)
