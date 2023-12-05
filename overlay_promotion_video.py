@@ -57,7 +57,7 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
     data = {'Reference Timestamp(ms)': [], 'Reference Frame Number': [],
             'Testing Timestamp(ms)': [], 'Testing Frame Number': [],
-            'Timestamp Difference': [], 'Frame Number Difference': []}
+            'Timestamp Difference': [], 'Frame Number Difference': [], 'Promotion Video Status': []}
 
     # Initialize variables outside the loop
     ref_timestamp, ref_frame_num = 0, 0
@@ -83,10 +83,17 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
                 frame_num_diff = test_frame_num - ref_frame_num
                 data['Timestamp Difference'].append(timestamp_diff)
                 data['Frame Number Difference'].append(frame_num_diff)
+
+                # Determine Promotion Video Status
+                if timestamp_diff == 0 and frame_num_diff == 0:
+                    data['Promotion Video Status'].append('Same Frame')
+                else:
+                    data['Promotion Video Status'].append('Overlay')
             else:
                 # If no reference frame, append NaN or 0 to maintain the array length
                 data['Timestamp Difference'].append(0)
                 data['Frame Number Difference'].append(0)
+                data['Promotion Video Status'].append('')
 
     df = pd.DataFrame(data)
     return df
