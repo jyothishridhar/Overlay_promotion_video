@@ -55,8 +55,8 @@ def detect_overlay(video_content):
 
 def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames):
     max_length = max(len(reference_overlay_frames), len(testing_overlay_frames))
-    data = {'Reference Timestamp': [], 'Reference Frame Number': [],
-            'Testing Timestamp': [], 'Testing Frame Number': [],
+    data = {'Reference Timestamp(ms)': [], 'Reference Frame Number': [],
+            'Testing Timestamp(ms)': [], 'Testing Frame Number': [],
             'Timestamp Difference': [], 'Frame Number Difference': []}
 
     # Initialize variables outside the loop
@@ -65,16 +65,16 @@ def generate_overlay_report_df(reference_overlay_frames, testing_overlay_frames)
     for row_num in range(1, max_length + 1):
         if row_num <= len(reference_overlay_frames):
             ref_timestamp, ref_frame_num = reference_overlay_frames[row_num - 1]
-            data['Reference Timestamp'].append(ref_timestamp)
+            data['Reference Timestamp(ms)'].append(ref_timestamp)
             data['Reference Frame Number'].append(ref_frame_num)
         else:
             # If no reference frame, append NaN or 0 to maintain the array length
-            data['Reference Timestamp'].append(0)
+            data['Reference Timestamp(ms)'].append(0)
             data['Reference Frame Number'].append(0)
 
         if row_num <= len(testing_overlay_frames):
             test_timestamp, test_frame_num = testing_overlay_frames[row_num - 1]
-            data['Testing Timestamp'].append(test_timestamp)
+            data['Testing Timestamp(ms)'].append(test_timestamp)
             data['Testing Frame Number'].append(test_frame_num)
 
             # Update timestamp_diff and frame_num_diff only if reference frames are available
